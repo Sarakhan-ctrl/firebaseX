@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -69,7 +70,7 @@ fun HomePage(navController: NavHostController,imageViewModel: MyFeedVM) {
         val uri=result.data?.data
         if(uri!=null && currentData!=null){
             imageViewModel.onIntentEvent(FeedIntent.DeleteImage(currentData!!))
-            imageViewModel.uploadImg(uri)
+            imageViewModel.uploadImg(uri.toString())
             currentData=null
         }
     }
@@ -97,6 +98,7 @@ fun HomePage(navController: NavHostController,imageViewModel: MyFeedVM) {
             ) {
                 items(myFeedState.imagesList){wallpaperData->
                     Box(modifier = Modifier.clickable{
+
                         currentData=wallpaperData
                         val intent=
                             Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
@@ -114,6 +116,20 @@ fun HomePage(navController: NavHostController,imageViewModel: MyFeedVM) {
                         }
                     }
 
+                }
+            }
+            if (myFeedState.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        // This dims the screen behind the spinner!
+                        .background(Color.Black.copy(alpha = 0.6f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 4.dp
+                    )
                 }
             }
 

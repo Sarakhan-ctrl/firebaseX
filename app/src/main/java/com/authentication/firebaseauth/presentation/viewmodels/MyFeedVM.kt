@@ -1,45 +1,37 @@
 package com.authentication.firebaseauth.presentation.viewmodels
 
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.authentication.firebaseauth.data.WallpaperData
+import com.authentication.firebaseauth.domain.FirebaseImageRepository
+import com.authentication.firebaseauth.domain.ImageRepository
 import com.authentication.firebaseauth.presentation.states.FeedState
 import com.authentication.firebaseauth.presentation.intents.FeedIntent
-import com.google.firebase.Firebase
-import com.google.firebase.storage.storage
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
-import java.util.UUID
 
 // logic like CRUD
-class MyFeedVM: ViewModel() {
-    private val firebaseStorage= Firebase.storage.reference   // initializing firebase storage
+class MyFeedVM(private val repository: ImageRepository = FirebaseImageRepository()): ViewModel() {
     private val _state=MutableStateFlow(FeedState())
     val state=_state.asStateFlow()
 
-    fun uploadImg(uri: Uri){                                                                         // Uniform Resource Identifier: a path pointing to where the image is present on the users phone (it handles the path to firebase and says "go fetch it")
-        val fileName= UUID.randomUUID().toString()                                           // store the file name in a variable -> UUID generate code for each image so make sure its random and doesn't repeat or override another image"s code
-        val fileLocation= firebaseStorage.child(fileName)                 // store the file location in a variable//    (.child("images")-> look for a folder, if not then create an empty one so i can store in it..)
+    fun uploadImg(uriString: String){                                                               // Uniform Resource Identifier: a path pointing to where the image is present on the users phone (it handles the path to firebase and says "go fetch it")
+
         viewModelScope.launch {
             _state.value=state.value.copy(isLoading = true, error = null)
             try {
-                _state.update { it.copy(isLoading = true) }                                          // show spinner
-                fileLocation.putFile(uri).await()                                                    // put the file  in that location and wait till it finishes
-                val fileUrl= fileLocation.downloadUrl.await()                                   // get the url of the file
-                val newImage= WallpaperData(fileName,fileUrl.toString())
+                val newImage= repository.uploadImage(uriString)
                 _state.update {
-                    it->it.copy(imagesList=listOf(newImage)+it.imagesList)                         // add the file to the stateflow and at top
+                    it->it.copy(
+                    imagesList=listOf(newImage)+it.imagesList,
+                    isLoading = false
+                    )                                                                               // add the file to the stateflow and at top
                 }
-
             }catch (e:Exception){
                 _state.update { it.copy(error = e.message) }
-            }finally {
-                                                                                                     //Whether it succeeds or fails, turn off the loading spinner!
+            }finally {                                                                              //Whether it succeeds or fails, turn off the loading spinner!
                 _state.update { it.copy(isLoading = false) }
             }
         }
@@ -68,29 +60,21 @@ class MyFeedVM: ViewModel() {
     }
     fun onIntentEvent(intent: FeedIntent){
         when(intent){
-            is FeedIntent.LoadFeed->fetchImg()
+            is FeedIntent.LoadFeed->fetchImage()
             is FeedIntent.DeleteImage -> deleteImg(intent.wallpaper)
         }
     }
-    fun fetchImg() {
+    fun fetchImage() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
-                val allImages = firebaseStorage.listAll().await()
-                                                                                                    //                val imgUrls = allImgs.items.map {
-                                                                                                    //                    it.downloadUrl.await()
-                                                                                                    //                }
-                val imgUrls = allImages.items.mapNotNull {
-                   try {
-                       val url=it.downloadUrl.await().toString()
-                       WallpaperData(it.name,url)                                 // name is from WallpaperData class
-                   }catch (e:Exception){
-                       null
-                   }
-                }
+                val newImage= repository.fetchImg()
                 _state.update {
-                    it.copy(imagesList = imgUrls.sortedByDescending { it.name }) }
-
+                    it.copy(
+                        imagesList = newImage.sortedByDescending { img -> img.name },
+                        isLoading = false
+                    )
+                }
             }catch (e:Exception){
                 _state.update { it.copy(error = e.message) }
             }
@@ -121,7 +105,7 @@ class MyFeedVM: ViewModel() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             try {
-                firebaseStorage.child(wallpaper.name).delete().await()
+                repository.deleteImage(wallpaper.name)
                 _state.update {
                     it.copy(imagesList = it.imagesList.filter { it.name != wallpaper.name })
                 }
