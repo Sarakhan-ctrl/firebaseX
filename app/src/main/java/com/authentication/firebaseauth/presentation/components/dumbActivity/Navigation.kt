@@ -13,6 +13,7 @@ import com.authentication.firebaseauth.data.googleAuthUiClient.MyGoogleAuthUiCli
 import com.authentication.firebaseauth.presentation.components.homePage.HomePage
 import com.authentication.firebaseauth.presentation.components.SignInScreen
 import com.authentication.firebaseauth.presentation.components.homePage.AddImage
+import com.authentication.firebaseauth.presentation.components.publishScreen.PublishScreen
 import com.authentication.firebaseauth.presentation.viewmodels.MyFeedVM
 
 @Composable
@@ -59,6 +60,14 @@ fun Navigation() {
             }
             composable(Routes.IMAGE_SCREEN) {
                 AddImage(navController,imageViewModel = sharedViewModel)
+            }
+            composable(Routes.PUBLISH_SCREEN) {backStackEntry->
+                val encodedUri = backStackEntry.arguments?.getString("imageUri") ?: ""
+                val decodedUri = java.net.URLDecoder.decode(encodedUri, "utf-8")
+                PublishScreen(localImageUri = decodedUri,
+                    imageViewModel = sharedViewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
             }
         }
     }

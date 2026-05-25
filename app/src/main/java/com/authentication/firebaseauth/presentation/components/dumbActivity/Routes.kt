@@ -7,5 +7,6 @@ object Routes {
     val AUTH_GRAPH="auth_graph"
     val APP_PAGES="app_pages"
     val IMAGE_SCREEN="image_screen"
+    val PUBLISH_SCREEN="publish_screen/{uri.toString()}"
 
 }

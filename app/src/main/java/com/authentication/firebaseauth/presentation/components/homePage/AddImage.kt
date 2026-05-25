@@ -24,7 +24,7 @@ fun AddImage(navController: NavHostController ,imageViewModel: MyFeedVM) {
         result ->
         val uri = result.data?.data                                                            // get the uri of the image
         if (uri != null) {                                                                          // if the uri is not null, upload the image
-            imageViewModel.uploadImg(uri.toString())
+            imageViewModel.uploadImg(uri.toString(), listOf())
 
         }
     }

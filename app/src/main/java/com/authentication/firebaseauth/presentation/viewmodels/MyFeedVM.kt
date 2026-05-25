@@ -17,12 +17,25 @@ class MyFeedVM(private val repository: ImageRepository = FirebaseImageRepository
     private val _state=MutableStateFlow(FeedState())
     val state=_state.asStateFlow()
 
-    fun uploadImg(uriString: String){                                                               // Uniform Resource Identifier: a path pointing to where the image is present on the users phone (it handles the path to firebase and says "go fetch it")
+    init {
+        onIntentEvent(FeedIntent.LoadFeed)
+    }
+    fun onIntentEvent(intent: FeedIntent){
+        when(intent){
+            is FeedIntent.LoadFeed->fetchImage()
+            is FeedIntent.DeleteImage -> deleteImg(intent.wallpaper)
+            is FeedIntent.UploadImage -> uploadImg(intent.wallpaper,intent.finalTagList)
+        }
+    }
+
+
+
+    fun uploadImg(uriString: String, tags: List<String>){                                                               // Uniform Resource Identifier: a path pointing to where the image is present on the users phone (it handles the path to firebase and says "go fetch it")
 
         viewModelScope.launch {
             _state.value=state.value.copy(isLoading = true, error = null)
             try {
-                val newImage= repository.uploadImage(uriString)
+                val newImage= repository.uploadImage(uriString,tags)
                 _state.update {
                     it->it.copy(
                     imagesList=listOf(newImage)+it.imagesList,
@@ -55,15 +68,6 @@ class MyFeedVM(private val repository: ImageRepository = FirebaseImageRepository
         }
     }*/
 
-    init {
-        onIntentEvent(FeedIntent.LoadFeed)
-    }
-    fun onIntentEvent(intent: FeedIntent){
-        when(intent){
-            is FeedIntent.LoadFeed->fetchImage()
-            is FeedIntent.DeleteImage -> deleteImg(intent.wallpaper)
-        }
-    }
     fun fetchImage() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }

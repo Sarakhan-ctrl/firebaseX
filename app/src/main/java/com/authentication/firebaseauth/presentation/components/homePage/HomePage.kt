@@ -70,7 +70,8 @@ fun HomePage(navController: NavHostController,imageViewModel: MyFeedVM) {
         val uri=result.data?.data
         if(uri!=null && currentData!=null){
             imageViewModel.onIntentEvent(FeedIntent.DeleteImage(currentData!!))
-            imageViewModel.uploadImg(uri.toString())
+            navController.navigate(Routes.PUBLISH_SCREEN)
+//            imageViewModel.uploadImg(uri.toString(), listOf())
             currentData=null
         }
     }
