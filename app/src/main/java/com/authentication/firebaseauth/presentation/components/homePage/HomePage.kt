@@ -51,6 +51,8 @@ import com.authentication.firebaseauth.ui.theme.BlackBG
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,10 +70,15 @@ fun HomePage(navController: NavHostController,imageViewModel: MyFeedVM) {
          ActivityResultContracts.StartActivityForResult()){
             result->
         val uri=result.data?.data
-        if(uri!=null && currentData!=null){
-            imageViewModel.onIntentEvent(FeedIntent.DeleteImage(currentData!!))
-            navController.navigate(Routes.PUBLISH_SCREEN)
-//            imageViewModel.uploadImg(uri.toString(), listOf())
+        if(uri != null){
+            // 1. You got a real URI from the gallery! Now we encode it safely.
+            val encodedUri = URLEncoder.encode(uri.toString(), StandardCharsets.UTF_8.toString())
+            // 2. ONLY if currentData isn't null, delete the old image (Are you sure you want to do this here?)
+            if (currentData != null) {
+                imageViewModel.onIntentEvent(FeedIntent.DeleteImage(currentData!!))
+                currentData = null
+            }
+            navController.navigate("publish_screen/$encodedUri")
             currentData=null
         }
     }

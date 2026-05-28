@@ -80,4 +80,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     implementation("com.google.firebase:firebase-firestore-ktx:24.10.0")
+
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 }

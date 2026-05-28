@@ -5,10 +5,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.authentication.firebaseauth.data.googleAuthUiClient.MyGoogleAuthUiClient
 import com.authentication.firebaseauth.presentation.components.homePage.HomePage
 import com.authentication.firebaseauth.presentation.components.SignInScreen
@@ -61,7 +63,9 @@ fun Navigation() {
             composable(Routes.IMAGE_SCREEN) {
                 AddImage(navController,imageViewModel = sharedViewModel)
             }
-            composable(Routes.PUBLISH_SCREEN) {backStackEntry->
+            composable(Routes.PUBLISH_SCREEN,arguments = listOf(
+                navArgument("imageUri") { type = NavType.StringType }
+            )) {backStackEntry->
                 val encodedUri = backStackEntry.arguments?.getString("imageUri") ?: ""
                 val decodedUri = java.net.URLDecoder.decode(encodedUri, "utf-8")
                 PublishScreen(localImageUri = decodedUri,

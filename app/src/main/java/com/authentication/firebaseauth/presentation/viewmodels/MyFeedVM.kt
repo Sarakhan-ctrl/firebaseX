@@ -1,9 +1,11 @@
 package com.authentication.firebaseauth.presentation.viewmodels
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.authentication.firebaseauth.data.WallpaperData
-import com.authentication.firebaseauth.domain.FirebaseImageRepository
+import com.authentication.firebaseauth.data.FirebaseImageRepository
 import com.authentication.firebaseauth.domain.ImageRepository
 import com.authentication.firebaseauth.presentation.states.FeedState
 import com.authentication.firebaseauth.presentation.intents.FeedIntent
@@ -13,7 +15,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 // logic like CRUD
-class MyFeedVM(private val repository: ImageRepository = FirebaseImageRepository()): ViewModel() {
+class MyFeedVM(application: Application): AndroidViewModel(application) {
+
+    private val repository = FirebaseImageRepository(application.applicationContext)
     private val _state=MutableStateFlow(FeedState())
     val state=_state.asStateFlow()
 
@@ -27,8 +31,6 @@ class MyFeedVM(private val repository: ImageRepository = FirebaseImageRepository
             is FeedIntent.UploadImage -> uploadImg(intent.wallpaper,intent.finalTagList)
         }
     }
-
-
 
     fun uploadImg(uriString: String, tags: List<String>){                                                               // Uniform Resource Identifier: a path pointing to where the image is present on the users phone (it handles the path to firebase and says "go fetch it")
 
