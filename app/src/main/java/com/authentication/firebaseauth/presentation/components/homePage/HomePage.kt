@@ -2,6 +2,7 @@ package com.authentication.firebaseauth.presentation.components.homePage
 
 import android.content.Intent
 import android.provider.MediaStore
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -26,7 +28,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,7 +40,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.authentication.firebaseauth.R
@@ -51,34 +51,28 @@ import com.authentication.firebaseauth.ui.theme.BlackBG
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.haze
 import dev.chrisbanes.haze.hazeChild
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePage(navController: NavHostController,imageViewModel: MyFeedVM) {
-
                                                                                                     //    val imageViewModel: MyFeedVM = viewModel()                                                    // 1.  Initializing viewmodel  .. doubtfull
     val myFeedState by imageViewModel.state.collectAsState()
     var currentData by remember { mutableStateOf<WallpaperData?>(null) }       // to extract the current state so it can be updated when required..(current value is null)
 
-   /* LaunchedEffect(Unit) {
-        imageViewModel.onIntentEvent(FeedIntent.LoadFeed)                                           // init is already used in VM!!
-    } */
-
     val galleryLauncher=rememberLauncherForActivityResult(
          ActivityResultContracts.StartActivityForResult()){
-            result->
+        result->
         val uri=result.data?.data
+        Log.d("NAV_TEST", "1. Gallery closed. Did we get a URI? $uri")
         if(uri != null){
-            // 1. You got a real URI from the gallery! Now we encode it safely.
-            val encodedUri = URLEncoder.encode(uri.toString(), StandardCharsets.UTF_8.toString())
-            // 2. ONLY if currentData isn't null, delete the old image (Are you sure you want to do this here?)
+            imageViewModel.imageUriToPublish = uri.toString()
+            Log.d("NAV_TEST", "2. Saved URI to ViewModel! Navigating to Publish...")
+
             if (currentData != null) {
                 imageViewModel.onIntentEvent(FeedIntent.DeleteImage(currentData!!))
                 currentData = null
             }
-            navController.navigate("publish_screen/$encodedUri")
+            navController.navigate("publish_screen")
             currentData=null
         }
     }
@@ -106,21 +100,20 @@ fun HomePage(navController: NavHostController,imageViewModel: MyFeedVM) {
             ) {
                 items(myFeedState.imagesList){wallpaperData->
                     Box(modifier = Modifier.clickable{
-
                         currentData=wallpaperData
                         val intent=
                             Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
                             galleryLauncher.launch(intent)
                     })
                     {
-                        AsyncImage(model = wallpaperData.url ,
+                        AsyncImage(model = wallpaperData.url,
                             contentDescription = null,
                             modifier = Modifier.fillMaxWidth().aspectRatio(1f),
                             contentScale = ContentScale.Crop)
                         IconButton(onClick = {
                             imageViewModel.onIntentEvent(FeedIntent.DeleteImage(wallpaperData))
                         }){
-                            Icon(painter = painterResource(id = R.drawable.delete), contentDescription = null)
+                            Icon(painter = painterResource(id = R.drawable.delete), modifier = Modifier.size(20.dp).align(Alignment.TopStart), contentDescription = null)
                         }
                     }
 
@@ -170,7 +163,7 @@ fun HomePage(navController: NavHostController,imageViewModel: MyFeedVM) {
                         painterResource(R.drawable.wallpaper),
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.clickable(onClick = { navController.navigate(Routes.IMAGE_SCREEN) })
+                        modifier = Modifier.clickable(onClick = { navController.navigate(Routes.ADD_IMAGE) })
                     )
                 }
                 

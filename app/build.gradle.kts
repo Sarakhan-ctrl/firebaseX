@@ -49,7 +49,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.2") // Compose ViewModel
 
     implementation("dev.chrisbanes.haze:haze:0.7.3")   // haze(Glassmorphism)
-    val navVersion = "2.9.7" // for navigation
+
+    val navVersion = "2.9.7"                        // for navigation
     implementation("androidx.navigation:navigation-compose:$navVersion")
 
     val lifecycleVersion = "2.10.0" // Lifecycle-runtime-ktx

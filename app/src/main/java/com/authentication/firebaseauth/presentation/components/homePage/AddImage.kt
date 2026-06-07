@@ -1,41 +1,43 @@
 package com.authentication.firebaseauth.presentation.components.homePage
 
-import android.content.Intent
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.NavHostController
 import com.authentication.firebaseauth.presentation.viewmodels.MyFeedVM
+import android.content.Intent
+import androidx.navigation.NavHostController
+import com.authentication.firebaseauth.presentation.components.dumbActivity.Routes
 
 @Composable
-fun AddImage(navController: NavHostController ,imageViewModel: MyFeedVM) {
+fun AddImage(navController: NavHostController, imageViewModel: MyFeedVM) {
 
-    val context = LocalContext.current
-    val feedState by imageViewModel.state.collectAsState()                                // watch the state
+    val galleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val uri = result.data?.data
 
-    val galleryLauncher = rememberLauncherForActivityResult(  // open gallery to fetch images
-        ActivityResultContracts.StartActivityForResult()                                   // used to open the gallery and get the image
-    ) {
-        result ->
-        val uri = result.data?.data                                                            // get the uri of the image
-        if (uri != null) {                                                                          // if the uri is not null, upload the image
-            imageViewModel.uploadImg(uri.toString(), listOf())
+        if (uri != null) {
+            // 1. Save the URI to the Shared ViewModel!
+            imageViewModel.imageUriToPublish = uri.toString()
 
-        }
-    }
-    LaunchedEffect(feedState.isLoading) {
-        if (!feedState.isLoading && feedState.imagesList.isNotEmpty()) {
+            // 2. Navigate to the Publish Screen!
+            navController.navigate("publish_screen") {
+                // This removes 'AddImage' from the back queue so hitting the physical back button
+                // on the Publish screen doesn't accidentally reopen the gallery!
+                popUpTo(Routes.ADD_IMAGE) { inclusive = true }
+            }
+        } else {
+            // 3. If the user hit "Cancel" in the gallery, don't leave them on a blank screen.
+            // Send them back to the Home Page.
             navController.popBackStack()
         }
     }
 
+    // Launch the gallery immediately when the user clicks the bottom bar icon
     LaunchedEffect(Unit) {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)   // intent to open the gallery
-        galleryLauncher.launch(intent)                                                       //  launch the intent
+        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+        galleryLauncher.launch(intent)
     }
 }

@@ -3,14 +3,14 @@ package com.authentication.firebaseauth.presentation.components.dumbActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import com.authentication.firebaseauth.R
 import com.authentication.firebaseauth.data.googleAuthUiClient.MyGoogleAuthUiClient
 import com.authentication.firebaseauth.presentation.components.homePage.HomePage
 import com.authentication.firebaseauth.presentation.components.SignInScreen
@@ -22,11 +22,13 @@ import com.authentication.firebaseauth.presentation.viewmodels.MyFeedVM
 fun Navigation() {
     val context = LocalContext.current.applicationContext
     val sharedViewModel: MyFeedVM = viewModel()
+    val webClientId = stringResource(id = R.string.web_client_id)
+    val credentialManager = CredentialManager.create(context)
 
      val googleAuthUiClient= remember {                                           // Initialize your Bouncer here so the whole app can use it
         MyGoogleAuthUiClient(
-            context = context,
-            credentialManager = CredentialManager.create(context)
+            webClientId= webClientId,
+            credentialManager= credentialManager
         )
     }
 
@@ -37,6 +39,7 @@ fun Navigation() {
         navController = navController,
         startDestination = startingFolder,                                                          // Where the app starts
     ) {
+        // grp 1
         navigation(
             startDestination = Routes.SIGN_IN,
             route =Routes.AUTH_GRAPH                                                                // The name of this group
@@ -53,6 +56,7 @@ fun Navigation() {
             }
         }
 
+        // grp 2
         navigation(
             startDestination = Routes.MAIN_FEED,
             route = Routes.APP_PAGES                                                                 // The name of this group
@@ -60,15 +64,12 @@ fun Navigation() {
             composable(Routes.MAIN_FEED) {
                 HomePage(navController,imageViewModel = sharedViewModel)
             }
-            composable(Routes.IMAGE_SCREEN) {
+            composable(Routes.ADD_IMAGE) {
                 AddImage(navController,imageViewModel = sharedViewModel)
             }
-            composable(Routes.PUBLISH_SCREEN,arguments = listOf(
-                navArgument("imageUri") { type = NavType.StringType }
-            )) {backStackEntry->
-                val encodedUri = backStackEntry.arguments?.getString("imageUri") ?: ""
-                val decodedUri = java.net.URLDecoder.decode(encodedUri, "utf-8")
-                PublishScreen(localImageUri = decodedUri,
+            composable("publish_screen")
+            {
+                PublishScreen(localImageUri = sharedViewModel.imageUriToPublish,
                     imageViewModel = sharedViewModel,
                     onNavigateBack = { navController.popBackStack() }
                 )

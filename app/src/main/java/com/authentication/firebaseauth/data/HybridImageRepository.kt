@@ -3,6 +3,7 @@ package com.authentication.firebaseauth.data
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import androidx.core.net.toUri
 import com.authentication.firebaseauth.domain.ImageRepository
 import com.google.firebase.Firebase
@@ -20,11 +21,8 @@ import java.util.UUID
 
 // 1. We added 'context' here so the phone can read the image file!
 class FirebaseImageRepository(@SuppressLint("StaticFieldLeak") private val context: Context) : ImageRepository {
-
-    // Notice: firebaseStorage is GONE. We only have Firestore now!
     private val firestore = Firebase.firestore
     private val collectionName = "wallpapers"
-
     override suspend fun uploadImage(uriString: String, tags: List<String>): WallpaperData {
         return withContext(Dispatchers.IO) {
             val uri = uriString.toUri()
@@ -77,15 +75,35 @@ class FirebaseImageRepository(@SuppressLint("StaticFieldLeak") private val conte
     }
 
     override suspend fun fetchImg(): List<WallpaperData> {
-        // This stays exactly the same! Firestore is still handling our data.
+        Log.d("FETCH_TEST", "1. Asking Firestore for images from collection: $collectionName")
+
         val snapshot = try {
             firestore.collection(collectionName).get().await()
-        } catch (_: Exception) {
+        }
+        catch (e: Exception) {
+            // TRIPWIRE: Did the internet or database connection crash?
+            Log.e("FETCH_TEST", "X. ERROR FETCHING FROM CLOUD: ${e.message}")
             return emptyList()
         }
-        return snapshot.documents.mapNotNull { document ->
-            document.toObject(WallpaperData::class.java)
+
+        // TRIPWIRE: How many items are ACTUALLY in your database right now?
+        Log.d("FETCH_TEST", "2. Firestore replied! Found ${snapshot.documents.size} raw documents.")
+
+        val mappedImages = snapshot.documents.mapNotNull { document ->
+            val img = try {
+                document.toObject(WallpaperData::class.java)
+            } catch (e: Exception) {
+                // Catching any weird Firebase parsing errors
+                null
+            }
+            if (img == null) {
+                // TRIPWIRE: If this prints, your WallpaperData class is missing default values!
+                Log.e("FETCH_TEST", "WARNING: Failed to convert document ${document.id}! Check your data class.")
+            }
+            img
         }
+        Log.d("FETCH_TEST", "3. Successfully mapped ${mappedImages.size} images to our app.")
+        return mappedImages
     }
 
     override suspend fun deleteImage(wallpaper: String) {

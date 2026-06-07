@@ -1,5 +1,6 @@
 package com.authentication.firebaseauth.presentation.components.publishScreen
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,6 +17,7 @@ fun PublishScreen(
     imageViewModel: MyFeedVM,
     onNavigateBack: () -> Unit
 ) {
+    Log.d("NAV_TEST", "3. Publish Screen successfully opened! The URI is: $localImageUri")
     // 1. Create variables for your specific tags
     var tag1 by remember { mutableStateOf("") }
     var tag2 by remember { mutableStateOf("") }
@@ -24,7 +26,6 @@ fun PublishScreen(
     val state by imageViewModel.state.collectAsState()
 
     Column(modifier = Modifier.padding(16.dp)) {
-
         // 2. Coil shows the image directly from the phone! (No Firebase needed yet)
         AsyncImage(
             model = localImageUri,

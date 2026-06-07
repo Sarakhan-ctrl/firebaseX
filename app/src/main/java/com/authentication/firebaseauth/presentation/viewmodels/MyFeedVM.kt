@@ -1,6 +1,9 @@
 package com.authentication.firebaseauth.presentation.viewmodels
 
 import android.app.Application
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,6 +19,7 @@ import kotlinx.coroutines.launch
 
 // logic like CRUD
 class MyFeedVM(application: Application): AndroidViewModel(application) {
+    var imageUriToPublish by mutableStateOf<String>("")
 
     private val repository = FirebaseImageRepository(application.applicationContext)
     private val _state=MutableStateFlow(FeedState())

@@ -13,17 +13,16 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.tasks.await
 import java.util.concurrent.CancellationException
-import com.authentication.firebaseauth.R
 // 2. The Main Client Class
 class MyGoogleAuthUiClient(
-    private val context: Context,
-    private val credentialManager: CredentialManager
+    private val credentialManager: CredentialManager,
+    private val webClientId: String
 ) {
     private val auth = Firebase.auth
-    suspend fun signIn(): SignInResult {
+    suspend fun signIn(activityContext: Context): SignInResult {
         return try {
             val request = buildSignInRequest()
-            val result = credentialManager.getCredential(request=request, context=context)
+            val result = credentialManager.getCredential(request=request, context=activityContext)
             val token = extractGoogleToken(result.credential)
             val user = authenticateWithFirebase(token)
 
@@ -34,11 +33,11 @@ class MyGoogleAuthUiClient(
             SignInResult(data = null, errorMessage = e.message)
         }
     }
-    // Job 1: Build the request
+    // Build the request
     private fun buildSignInRequest(): GetCredentialRequest {
         val googleIdOption = GetGoogleIdOption.Builder()
             .setFilterByAuthorizedAccounts(false)
-            .setServerClientId(context.getString(R.string.web_client_id))
+            .setServerClientId(webClientId)
             .setAutoSelectEnabled(true)
             .build()
 
@@ -66,6 +65,7 @@ class MyGoogleAuthUiClient(
             profilePictureUrl = user.photoUrl?.toString()
         )
     }
+
     // Helper function to check if someone is already logged in when the app opens
     fun getSignedInUser(): UserData? {
         val user = auth.currentUser ?: return null

@@ -71,7 +71,7 @@ fun SignInScreen(authClient: MyGoogleAuthUiClient, onSignInSuccess: () -> Unit) 
                 isLoading = true   // Turn the animation on
                 // When the button is clicked, launch the background work
                 coroutineScope.launch {
-                    val result = authClient.signIn()
+                    val result = authClient.signIn(context)
                     isLoading = false // Turn the animation off
                     if (result.data != null) {
                         // Success! Trigger the navigation to the next screen

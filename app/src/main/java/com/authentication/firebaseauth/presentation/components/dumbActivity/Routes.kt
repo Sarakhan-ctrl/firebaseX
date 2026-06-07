@@ -6,7 +6,7 @@ object Routes {
     val SIGN_IN="sign_in_screen"
     val AUTH_GRAPH="auth_graph"
     val APP_PAGES="app_pages"
-    val IMAGE_SCREEN="image_screen"
+    val ADD_IMAGE="add_image"
     val PUBLISH_SCREEN="publish_screen/{imageUri}"
 
 }
